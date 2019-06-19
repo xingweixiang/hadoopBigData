@@ -19,8 +19,11 @@ hadoop大数据
 		* [12、kafka](#12kafka)
 		* [13、Phoenix](#13Phoenix)
 		* [14、Ambari](#14Ambari)
-	* [二、大数据平台集群搭建](#二大数据平台集群搭建)
-		* [1、Hadoop HDFS安装与配置](#1Hadoop HDFS安装与配置)	
+	* [二、Hadoop大数据平台搭建](#二Hadoop大数据平台搭建)
+		* [1、集群搭建先决条件](#1集群搭建先决条件)		
+		* [2、Hadoop集群安装](#2Hadoop集群安装)	
+		* [3、ZooKeeper集群安装](#3ZooKeeper集群安装)
+		* [4、HBase集群安装](#4HBase集群安装)	
 	
 ### 一、主要组件
 以Hadoop为核心，Hadoop大数据应用生态中最主要的组件，在整个大数据应用于研发已经形成了一个基本完善的生态系统。
@@ -53,3 +56,204 @@ hadoop大数据
 - 是构建在HBase上的一个SQL层，能让我们用标准的JDBC APIs而不是HBase客户端APIs来创建表，插入数据和对HBase数据进行查询。
 ### 14、Ambari
 - i是一种基于Web的工具，支持Apache Hadoop集群的供应、管理和监控。Ambari已支持大多数Hadoop组件，包括HDFS、MapReduce、Hive、Pig、 Hbase、Zookeeper、Sqoop等。
+### 二、Hadoop大数据平台搭建
+### 1、集群搭建先决条件
+- 配置hadoop用户及其用户组(集群机)
+- 永久修改主机名(集群机)：vim /etc/sysconfig/network，修改了reboot重启，hostnamea查看是否生效
+- 配置防火墙(集群机)
+- 安装jdk(集群机)
+- 配置免密钥登录(集群机)
+- 配置集群时间同步
+### 2、Hadoop集群安装
+- 解压 tar -zxvf hadoop-2.8.5.tar.gz
+- 配置hadoop启动的jdk 
+```
+hadoop-2.8.5/etc/hadoop/hadoop-env.sh
+找到并修改为 export JAVA_HOME=/data/jdk1.8.0_191/
+```
+- 配置hadoop环境变量
+```
+export HADOOP_HOME=/data/hadoop-2.8.5
+export PATH=$HADOOP_HOME/bin:$PATH
+执行命令source  /etc/profile 使得hadoop环境变量生效
+```
+- 创建Hadoop数据目录：mkdir hadoopdata
+- 配置核心core-site.xml
+```
+<configuration>
+    <property>
+		<name>fs.defaultFS</name>
+		<value>hdfs://Master:8020</value>
+	</property>
+	<property>
+		<name>hadoop.tmp.dir</name>
+		<value>/data/hadoopdata</value>
+	</property>
+</configuration>
+```
+- 配置文件系统hdfs-site.xml
+```
+<configuration>
+	<property>
+		<name>dfs.replication</name>
+		<value>3</value>
+	</property>
+	<property>
+		<name>dfs.namenode.name.dir</name>
+		<value>/data/hadoopdata/dfs/name</value>
+	</property>
+	<property>
+		<name>dfs.datanode.data.dir</name>
+		<value>/data/hadoopdata/dfs/data</value>
+	</property>
+	<property>
+        <name>dfs.namenode.http-address</name>
+        <value>Master:50070</value>
+    </property>
+	<property>
+		<name>dfs.permissions</name>
+		<value>false</value>
+	</property>
+</configuration>
+```
+- 配置yarn-site.xml文件
+```
+<configuration>
+	<property>
+		<name>yarn.resourcemanager.hostname</name>
+		<value>Master</value>
+	</property>
+	<property>
+		<name>yarn.nodemanager.aux-services</name>
+		<value>mapreduce_shuffle</value>
+	</property>
+</configuration>
+```
+- 配置mapred-site.xml计算框架文件：cp mapred-site.xml.template mapred-site.xml（复制）
+```
+<configuration>
+	<!--指定运行mapreduce的环境是yarn-->
+	<property>
+		<name>mapreduce.framework.name</name>
+		<value>yarn</value>
+	</property>
+</configuration>
+```
+- 配置master上的slave文件
+```
+Master
+Slave0
+Slave1
+```
+- 将主节点master上的hdaoop文件拷贝到各个节点
+```
+scp -r hadoop-2.8.5 hadoop@slave1:~/ 
+```
+- 启动hadoop集群：切换到hadoop用户操作(su - hadoop)
+```
+首次启动需要先在 Master节点执行格式化：$ bin/hadoop namenode -format
+启动：在主节点上执行 $ bin/start-all.sh 或 先start-dfs.sh,再start-yarn.sh
+```
+- 验证集群搭建成功
+在mater上面键入jps后看到<br>
+![hadoop_master](./example/img/hadoop_master.jpg)<br>
+在slave上键入jps后看到<br>
+![hadoop_slave](./example/img/hadoop_slave.jpg)<br>
+则说明集群搭建成功（或者访问web验证：http://ip:50070）
+- 停止Hadoop：在主节点上执行 $ bin/stop-all.sh
+### 3、ZooKeeper集群安装
+- 切换到hadoop用户(su - hadoop)，解压 tar -zxvf zookeeper-3.4.14.tar.gz 
+- 创建ZooKeeper数据目录 mkdir zookeeper
+- 创建myid文件 
+```
+touch myid
+echo "1" > myid
+```
+- 配置zoo.cfg（复制 cp zoo_sample.cfg zoo.cfg）
+```
+dataDir=/data/zookeeper/data
+dataLogDir=/data/zookeeper/dataLog
+server.1=Master:2888:3888
+server.2=Slave0:2888:3888
+server.3=Slave1:2888:3888
+```
+- 拷贝zookeeper文件到各个节点
+```
+scp -r zookeeper-3.4.14@slave1:~/ 
+```
+- 修改各节点的myid文件
+- 在各节点配置环境变量/etc/profile
+```
+export ZOOKEEPER_HOME=/home/fesh/zookeeper-3.4.6
+export PATH=$PATH:$ZOOKEEPER_HOME/bin
+执行source /etc/profile生效
+```
+- 启动zookeeper：在$ZOOKEEPER_HOME目录下，运行bin/zkServer.sh start 启动(集群机)
+- 查看启动状态：bin/zkServer.sh status，可以看到三台机器会有两个follower和一个leader<br>
+或者用jps命令查看会有进程：QuorumPeerMain
+### 4、HBase集群安装
+- 切换到hadoop用户(su - hadoop)，解压 tar -zxvf hbase-2.0.5.tar.gz (HBase必须选择与hadoop相对应的版本)
+- 创建hbase数据目录 mkdir hbasedata
+- 拷贝hadoop 的 hdfs-site.xml 和 core-site.xml 放到 hbase-2.0.5/conf 下
+- 修改hbase-env.sh
+```
+export JAVA_HOME=/data/jdk1.8.0_191
+export HBASE_LOG_DIR=/data/hbasedata/logs
+export HBASE_PID_DIR=/data/hbasedata/pids
+export HBASE_MANAGES_ZK=false #使用外部的zk
+```
+- 修改 hbase-site.xml
+```
+<configuration>
+    <!-- 指定hbase在HDFS上存储的路径 -->
+    <property>
+        <name>hbase.rootdir</name>
+        <value>hdfs://Master:8020/hbase</value>
+    </property>
+	<property>
+		<name>hbase.master.maxclockskew</name>
+		<value>180000</value>
+	</property>
+	<property>
+		<name>hbase.zookeeper.property.dataDir</name>
+		<value>/data/zookeeper/data</value>
+	</property>
+	<property>
+		<name>hbase.cluster.distributed</name>
+		<value>true</value>
+	</property>
+	<property>
+		<name>hbase.unsafe.stream.capability.enforce</name>
+		<value>false</value>
+	</property>
+	<property>
+		<name>zookeeper.session.timeout</name>
+		<value>300000</value>
+	</property>
+	<property>
+		<name>hbase.zookeeper.quorum</name>
+		<value>Master:2181,Slave0:2181,Slave1:2181</value>
+	</property>
+</configuration>
+```
+- 配置HBase master的备用节点：新建backup-masters文件，修改内容为Slave0
+- 修改regionservers 文件：vim regionservers
+```
+Slave0
+Slave1
+```
+- 将HBase安装包分发到其他节点
+```
+scp -r hbase-2.0.5/ Slave0:~/
+```
+- 在各节点配置HBase环境变量：vim /etc/profile
+```
+export HBASE_HOME=/export/servers/hbase-2.0.5/
+export PATH=$HBASE_HOME/bin:$PATH
+执行source /etc/profile生效
+```
+- 启动HBase并验证：在主节点上运行 start-hbase.sh 通过浏览器访问hbase管理页面验证(http://ip:16010)<br>
+或在mater上面键入jps后看到<br>
+![hbase_master](./example/img/hbase_master.jpg)<br>
+在slave上键入jps后看到<br>
+![hbase_slave](./example/img/hbase_slave.jpg)<br>
