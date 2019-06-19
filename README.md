@@ -24,6 +24,7 @@ hadoop大数据
 		* [2、Hadoop集群安装](#2Hadoop集群安装)	
 		* [3、ZooKeeper集群安装](#3ZooKeeper集群安装)
 		* [4、HBase集群安装](#4HBase集群安装)	
+		* [5、Kafka集群安装](#5Kafka集群安装)	
 	
 ### 一、主要组件
 以Hadoop为核心，Hadoop大数据应用生态中最主要的组件，在整个大数据应用于研发已经形成了一个基本完善的生态系统。
@@ -147,7 +148,7 @@ Slave1
 ```
 - 将主节点master上的hdaoop文件拷贝到各个节点
 ```
-scp -r hadoop-2.8.5 hadoop@slave1:~/ 
+scp -r hadoop-2.8.5 @ip:~/ 
 ```
 - 启动hadoop集群：切换到hadoop用户操作(su - hadoop)
 ```
@@ -179,7 +180,7 @@ server.3=Slave1:2888:3888
 ```
 - 拷贝zookeeper文件到各个节点
 ```
-scp -r zookeeper-3.4.14@slave1:~/ 
+scp -r zookeeper-3.4.14 @ip:~/ 
 ```
 - 修改各节点的myid文件
 - 在各节点配置环境变量/etc/profile
@@ -244,7 +245,7 @@ Slave1
 ```
 - 将HBase安装包分发到其他节点
 ```
-scp -r hbase-2.0.5/ Slave0:~/
+scp -r hbase-2.0.5 @ip:~/
 ```
 - 在各节点配置HBase环境变量：vim /etc/profile
 ```
@@ -256,4 +257,26 @@ export PATH=$HBASE_HOME/bin:$PATH
 或在mater上面键入jps后看到<br>
 ![hbase_master](./example/img/hbase_master.jpg)<br>
 在slave上键入jps后看到<br>
-![hbase_slave](./example/img/hbase_slave.jpg)<br>
+![hbase_slave](./example/img/hbase_slave.jpg)
+### 5、Kafka集群安装
+- 切换到hadoop用户(su - hadoop)，- 解压 tar -zxvf kafka_2.12-2.2.1.tgz
+- 配置Kafka环境变量
+```
+export Kafka_HOME=/data/kafka_2.12-2.2.1
+export PATH=$PATH:$Kafka_HOME/bin
+执行命令source  /etc/profile 使得环境变量生效
+```
+- 创建存放kafka消息目录：mkdir kafka-logs
+- 打开vim server.properties 修改文件主要参数
+```
+broker.id=0 #当前机器在集群中的唯一标识，和zookeeper的myid性质一样
+log.dirs=/data/kafka-logs #kafka数据的存放地址，多个地址的话用逗号分割 /data/kafka-logs-1，/data/kafka-logs-2
+zookeeper.connect=ip:2181,ip:2181,ip:2181 #Zookeeper连接参数
+```
+- 拷贝kafka文件到各个节点，在各个节点修改vim server.properties文件的broker.id，并mkdir kafka-logs
+```
+scp -r kafka @ip:~/ 
+```
+- 启动Kafka并验证：在集群机上进入cd 主目录，运行 bin/kafka-server-start.sh -daemon config/server.properties<br>
+在控制台上输入jps后看到<br>
+![kafka.jpg](./example/img/kafka.jpg)
