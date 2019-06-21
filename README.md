@@ -257,7 +257,9 @@ export PATH=$HBASE_HOME/bin:$PATH
 或在mater上面键入jps后看到<br>
 ![hbase_master](./example/img/hbase_master.jpg)<br>
 在slave上键入jps后看到<br>
-![hbase_slave](./example/img/hbase_slave.jpg)
+![hbase_slave](./example/img/hbase_slave.jpg)<br>
+- 开启HBase的thrift进程：$HBASE_HOME/bin/hbase-daemon.sh start thrift
+![hbase_thrift](./example/img/hbase_thrift.jpg)
 ### 5、Kafka集群安装
 - 切换到hadoop用户(su - hadoop)，- 解压 tar -zxvf kafka_2.12-2.2.1.tgz
 - 配置Kafka环境变量
@@ -271,6 +273,7 @@ export PATH=$PATH:$Kafka_HOME/bin
 ```
 broker.id=0 #当前机器在集群中的唯一标识，和zookeeper的myid性质一样
 log.dirs=/data/kafka-logs #kafka数据的存放地址，多个地址的话用逗号分割 /data/kafka-logs-1，/data/kafka-logs-2
+advertised.listeners=PLAINTEXT://192.168.0.47:9092
 zookeeper.connect=ip:2181,ip:2181,ip:2181 #Zookeeper连接参数
 ```
 - 拷贝kafka文件到各个节点，在各个节点修改vim server.properties文件的broker.id，并mkdir kafka-logs
