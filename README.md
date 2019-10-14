@@ -25,6 +25,8 @@ hadoop大数据
 		* [3、ZooKeeper集群安装](#3ZooKeeper集群安装)
 		* [4、HBase集群安装](#4HBase集群安装)	
 		* [5、Kafka集群安装](#5Kafka集群安装)	
+	* [三、分布式分析](#三分布式分析)
+	    * [1、ApacheKylin](#1ApacheKylin)		
 	
 ### 一、主要组件
 以Hadoop为核心，Hadoop大数据应用生态中最主要的组件，在整个大数据应用于研发已经形成了一个基本完善的生态系统。
@@ -283,3 +285,6 @@ scp -r kafka @ip:~/
 - 启动Kafka并验证：在集群机上进入cd 主目录，运行 bin/kafka-server-start.sh -daemon config/server.properties<br>
 在控制台上输入jps后看到<br>
 ![kafka.jpg](./example/img/kafka.jpg)
+### 三、分布式分析
+### 1、ApacheKylin
+- Apache Kylin是一个开源的分布式分析引擎，提供Hadoop/Spark之上的SQL查询接口及多维分析（OLAP）能力以支持超大规模数据，最初由eBay Inc. 开发并贡献至开源社区。它能在亚秒内查询巨大的Hive表。
