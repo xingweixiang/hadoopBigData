@@ -287,4 +287,9 @@ scp -r kafka @ip:~/
 ![kafka.jpg](./example/img/kafka.jpg)
 ### 三、分布式分析
 ### 1、ApacheKylin
-- Apache Kylin是一个开源的分布式分析引擎，提供Hadoop/Spark之上的SQL查询接口及多维分析（OLAP）能力以支持超大规模数据，最初由eBay Inc. 开发并贡献至开源社区。它能在亚秒内查询巨大的Hive表。
+- Apache Kylin是一个开源的分布式分析引擎，提供Hadoop/Spark之上的SQL查询接口及多维分析（OLAP）能力以支持超大规模数据，最初由eBay Inc. 开发并贡献至开源社区。它能在亚秒内查询巨大的Hive表。<br>
+Apache Kylin令使用者仅需三步，即可实现超大数据集上的亚秒级查询。<br>
+1)定义数据集上的一个星形或雪花形模型<br>
+2)在定义的数据表上构建cube<br>
+3)使用标准SQL通过ODBC、JDBC或RESTFUL API进行查询，仅需亚秒级响应时间即可获得查询结果<br>
+Kylin提供与多种数据可视化工具的整合能力，如Tableau，PowerBI等，令用户可以使用BI工具对Hadoop数据进行分析。
